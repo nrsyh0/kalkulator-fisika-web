@@ -1,234 +1,100 @@
-# app.py
-# Kalkulator Fisika Web — Satu File Saja
-#
-# Fitur:
-# 1. Kinematika   : jarak, kecepatan, waktu, percepatan
-# 2. Dinamika     : gaya, tekanan, energi kinetik
-# 3. Konversi     : energi & tekanan
-#
-# Jalankan: python app.py
-# Buka:    http://127.0.0.1:5000
+# kalkulator_fisika_streamlit.py
+# Aplikasi Streamlit untuk menghitung kinematika, dinamika, dan konversi satuan
 
-from flask import Flask, request, render_template_string
+import streamlit as st
 
-app = Flask(__name__)
+st.set_page_config(page_title="Kalkulator Fisika", layout="centered")
+st.title("🧮 Kalkulator Fisika Web")
+st.markdown("Gunakan tab di bawah ini untuk menghitung kinematika, dinamika, atau konversi satuan.")
 
-# ---------- HTML BASE ----------
-BASE = """
-<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8">
-  <title>Kalkulator Fisika</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>body{padding-top:20px}</style>
-</head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="{{ url_for('index') }}">Kalkulator Fisika</a>
-    <div class="collapse navbar-collapse">
-      <ul class="navbar-nav">
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('kinematika') }}">Kinematika</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('dinamika') }}">Dinamika</a></li>
-        <li class="nav-item"><a class="nav-link" href="{{ url_for('konversi') }}">Konversi</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
-<div class="container">
-  {% block content %}{% endblock %}
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-"""
+# Tab untuk fitur
+tab1, tab2, tab3 = st.tabs(["Kinematika", "Dinamika", "Konversi Satuan"])
 
-# ---------- HALAMAN BERANDA ----------
-INDEX = """
-{% extends base %}{% block content %}
-<h1 class="text-center">Selamat Datang di Kalkulator Fisika</h1>
-<p class="text-center">Gunakan menu di atas untuk mulai perhitungan.</p>
-{% endblock %}
-"""
+# ==============================
+# KINEMATIKA
+# ==============================
+with tab1:
+    st.header("Kalkulator Kinematika")
+    mode = st.selectbox("Pilih yang ingin dihitung:", ["Jarak (s)", "Kecepatan (v)", "Waktu (t)", "Percepatan (a)"])
 
-# ---------- KINEMATIKA ----------
-KINEMATIKA = """
-{% extends base %}{% block content %}
-<h2>Kalkulator Kinematika</h2>
-<form method="POST" class="mb-4">
-  <div class="mb-3">
-    <label class="form-label">Besaran yang dihitung</label>
-    <select name="mode" class="form-select" required>
-      <option value="jarak">Jarak (s)</option>
-      <option value="kecepatan">Kecepatan (v)</option>
-      <option value="waktu">Waktu (t)</option>
-      <option value="percepatan">Percepatan (a)</option>
-    </select>
-  </div>
-  <div class="row">
-    <div class="col-md-4 mb-3"><input name="s"  step="any" type="number" placeholder="Jarak s (m)" class="form-control"></div>
-    <div class="col-md-4 mb-3"><input name="v"  step="any" type="number" placeholder="Kecepatan v (m/s)" class="form-control"></div>
-    <div class="col-md-4 mb-3"><input name="t"  step="any" type="number" placeholder="Waktu t (s)" class="form-control"></div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 mb-3"><input name="v1" step="any" type="number" placeholder="Kecepatan awal v1 (m/s)" class="form-control"></div>
-    <div class="col-md-6 mb-3"><input name="v2" step="any" type="number" placeholder="Kecepatan akhir v2 (m/s)" class="form-control"></div>
-  </div>
-  <button class="btn btn-primary" type="submit">Hitung</button>
-</form>
-{% if result is not none %}
-<div class="alert alert-info"><strong>Hasil:</strong> {{ result }}</div>
-{% endif %}
-{% endblock %}
-"""
+    if mode == "Jarak (s)":
+        v = st.number_input("Kecepatan (m/s)", step=0.1)
+        t = st.number_input("Waktu (s)", step=0.1)
+        if st.button("Hitung Jarak"):
+            st.success(f"Jarak = {v * t:.2f} meter")
 
-# ---------- DINAMIKA ----------
-DINAMIKA = """
-{% extends base %}{% block content %}
-<h2>Kalkulator Dinamika</h2>
-<form method="POST" class="mb-4">
-  <div class="mb-3">
-    <label class="form-label">Besaran yang dihitung</label>
-    <select name="mode" class="form-select" required>
-      <option value="gaya">Gaya (N)</option>
-      <option value="tekanan">Tekanan (Pa)</option>
-      <option value="energi">Energi Kinetik (J)</option>
-    </select>
-  </div>
-  <div class="row">
-    <div class="col-md-4 mb-3"><input name="m"    step="any" type="number" placeholder="Massa m (kg)" class="form-control"></div>
-    <div class="col-md-4 mb-3"><input name="a"    step="any" type="number" placeholder="Percepatan a (m/s²)" class="form-control"></div>
-    <div class="col-md-4 mb-3"><input name="v"    step="any" type="number" placeholder="Kecepatan v (m/s)" class="form-control"></div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 mb-3"><input name="f"    step="any" type="number" placeholder="Gaya F (N)" class="form-control"></div>
-    <div class="col-md-6 mb-3"><input name="area" step="any" type="number" placeholder="Luas A (m²)" class="form-control"></div>
-  </div>
-  <button class="btn btn-primary" type="submit">Hitung</button>
-</form>
-{% if result is not none %}
-<div class="alert alert-info"><strong>Hasil:</strong> {{ result }}</div>
-{% endif %}
-{% endblock %}
-"""
+    elif mode == "Kecepatan (v)":
+        s = st.number_input("Jarak (m)", step=0.1)
+        t = st.number_input("Waktu (s)", step=0.1)
+        if t != 0 and st.button("Hitung Kecepatan"):
+            st.success(f"Kecepatan = {s / t:.2f} m/s")
 
-# ---------- KONVERSI ----------
-KONVERSI = """
-{% extends base %}{% block content %}
-<h2>Konversi Satuan</h2>
-<form method="POST" class="mb-4">
-  <div class="mb-3">
-    <label class="form-label">Jenis Besaran</label>
-    <select name="jenis" class="form-select" required>
-      <option value="energi">Energi</option>
-      <option value="tekanan">Tekanan</option>
-    </select>
-  </div>
-  <div class="row mb-3">
-    <div class="col-md-4"><input name="value" step="any" type="number" placeholder="Nilai" class="form-control" required></div>
-    <div class="col-md-4">
-      <select name="satuan_from" class="form-select" required>
-        <optgroup label="Energi">
-          <option value="joule">Joule</option><option value="kjoule">kJoule</option>
-          <option value="kwh">kWh</option><option value="cal">Kalori</option>
-        </optgroup>
-        <optgroup label="Tekanan">
-          <option value="pa">Pa</option><option value="kpa">kPa</option>
-          <option value="bar">Bar</option><option value="atm">Atm</option>
-          <option value="mmhg">mmHg</option>
-        </optgroup>
-      </select>
-    </div>
-    <div class="col-md-4">
-      <select name="satuan_to" class="form-select" required>
-        <optgroup label="Energi">
-          <option value="joule">Joule</option><option value="kjoule">kJoule</option>
-          <option value="kwh">kWh</option><option value="cal">Kalori</option>
-        </optgroup>
-        <optgroup label="Tekanan">
-          <option value="pa">Pa</option><option value="kpa">kPa</option>
-          <option value="bar">Bar</option><option value="atm">Atm</option>
-          <option value="mmhg">mmHg</option>
-        </optgroup>
-      </select>
-    </div>
-  </div>
-  <button class="btn btn-primary" type="submit">Konversi</button>
-</form>
-{% if result is not none %}
-<div class="alert alert-info"><strong>Hasil:</strong> {{ result }}</div>
-{% endif %}
-{% endblock %}
-"""
+    elif mode == "Waktu (t)":
+        s = st.number_input("Jarak (m)", step=0.1)
+        v = st.number_input("Kecepatan (m/s)", step=0.1)
+        if v != 0 and st.button("Hitung Waktu"):
+            st.success(f"Waktu = {s / v:.2f} detik")
 
-# ---------- ROUTES ----------
-@app.route('/')
-def index():
-    return render_template_string(INDEX, base=BASE)
+    elif mode == "Percepatan (a)":
+        v1 = st.number_input("Kecepatan awal v1 (m/s)", step=0.1)
+        v2 = st.number_input("Kecepatan akhir v2 (m/s)", step=0.1)
+        t = st.number_input("Waktu (s)", step=0.1)
+        if t != 0 and st.button("Hitung Percepatan"):
+            st.success(f"Percepatan = {(v2 - v1) / t:.2f} m/s²")
 
-# --- KINEMATIKA ---
-@app.route('/kinematika', methods=['GET', 'POST'])
-def kinematika():
-    res = None
-    if request.method == 'POST':
-        mode = request.form['mode']
+
+# ==============================
+# DINAMIKA
+# ==============================
+with tab2:
+    st.header("Kalkulator Dinamika")
+    mode = st.selectbox("Pilih yang ingin dihitung:", ["Gaya (F)", "Tekanan (P)", "Energi Kinetik (Ek)"])
+
+    if mode == "Gaya (F)":
+        m = st.number_input("Massa (kg)", step=0.1)
+        a = st.number_input("Percepatan (m/s²)", step=0.1)
+        if st.button("Hitung Gaya"):
+            st.success(f"Gaya = {m * a:.2f} Newton")
+
+    elif mode == "Tekanan (P)":
+        F = st.number_input("Gaya (N)", step=0.1)
+        A = st.number_input("Luas (m²)", step=0.01)
+        if A != 0 and st.button("Hitung Tekanan"):
+            st.success(f"Tekanan = {F / A:.2f} Pascal")
+
+    elif mode == "Energi Kinetik (Ek)":
+        m = st.number_input("Massa (kg)", step=0.1)
+        v = st.number_input("Kecepatan (m/s)", step=0.1)
+        if st.button("Hitung Energi Kinetik"):
+            st.success(f"Energi Kinetik = {0.5 * m * v**2:.2f} Joule")
+
+
+# ==============================
+# KONVERSI SATUAN
+# ==============================
+with tab3:
+    st.header("Konversi Satuan Fisika")
+    jenis = st.selectbox("Jenis yang ingin dikonversi:", ["Energi", "Tekanan"])
+
+    val = st.number_input("Nilai yang ingin dikonversi:", step=0.1)
+    satuan_from = st.selectbox("Dari satuan:", [])
+    satuan_to = st.selectbox("Ke satuan:", [])
+
+    energi_satuan = {"joule":1, "kjoule":1e3, "kwh":3.6e6, "kalori":4.184}
+    tekanan_satuan = {"pa":1, "kpa":1e3, "bar":1e5, "atm":101325, "mmhg":133.322}
+
+    if jenis == "Energi":
+        satuan_from = st.selectbox("Dari satuan:", list(energi_satuan.keys()), key="from_energy")
+        satuan_to = st.selectbox("Ke satuan:", list(energi_satuan.keys()), key="to_energy")
+        faktor = energi_satuan
+    elif jenis == "Tekanan":
+        satuan_from = st.selectbox("Dari satuan:", list(tekanan_satuan.keys()), key="from_pressure")
+        satuan_to = st.selectbox("Ke satuan:", list(tekanan_satuan.keys()), key="to_pressure")
+        faktor = tekanan_satuan
+
+    if st.button("Konversi"):
         try:
-            if mode == 'jarak':      # s = v * t
-                v = float(request.form['v']); t = float(request.form['t'])
-                res = v * t
-            elif mode == 'kecepatan':# v = s / t
-                s = float(request.form['s']); t = float(request.form['t'])
-                res = s / t
-            elif mode == 'waktu':    # t = s / v
-                s = float(request.form['s']); v = float(request.form['v'])
-                res = s / v
-            elif mode == 'percepatan':# a = (v2 - v1)/t
-                v1 = float(request.form['v1']); v2 = float(request.form['v2']); t = float(request.form['t'])
-                res = (v2 - v1) / t
-        except (ValueError, ZeroDivisionError):
-            res = "Input tidak valid"
-    return render_template_string(KINEMATIKA, base=BASE, result=res)
-
-# --- DINAMIKA ---
-@app.route('/dinamika', methods=['GET', 'POST'])
-def dinamika():
-    res = None
-    if request.method == 'POST':
-        mode = request.form['mode']
-        try:
-            if mode == 'gaya':       # F = m * a
-                m = float(request.form['m']); a = float(request.form['a'])
-                res = m * a
-            elif mode == 'tekanan':  # P = F / A
-                f = float(request.form['f']); area = float(request.form['area'])
-                res = f / area
-            elif mode == 'energi':   # Ek = ½ m v²
-                m = float(request.form['m']); v = float(request.form['v'])
-                res = 0.5 * m * v ** 2
-        except (ValueError, ZeroDivisionError):
-            res = "Input tidak valid"
-    return render_template_string(DINAMIKA, base=BASE, result=res)
-
-# --- KONVERSI ---
-@app.route('/konversi', methods=['GET', 'POST'])
-def konversi():
-    res = None
-    if request.method == 'POST':
-        jenis = request.form['jenis']
-        try:
-            val = float(request.form['value'])
-            sf  = request.form['satuan_from']
-            st  = request.form['satuan_to']
-            if jenis == 'energi':
-                faktor = {'joule':1, 'kjoule':1e3, 'kwh':3.6e6, 'cal':4.184}
-            else:  # tekanan
-                faktor = {'pa':1, 'kpa':1e3, 'bar':1e5, 'atm':101325, 'mmhg':133.322}
-            res = val * faktor[sf] / faktor[st]
-        except (ValueError, KeyError, ZeroDivisionError):
-            res = "Input tidak valid"
-    return render_template_string(KONVERSI, base=BASE, result=res)
-
-# ---------- MAIN ----------
-if __name__ == '__main__':
-    app.run(debug=True)
+            hasil = val * faktor[satuan_from] / faktor[satuan_to]
+            st.success(f"Hasil: {hasil:.4f} {satuan_to}")
+        except:
+            st.error("Terjadi kesalahan dalam konversi.")
